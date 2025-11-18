@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Motocompresores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: #2a2a2a;
+            border-right: 2px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #1f1f1f;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            color: #4a9eff;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* BOTONES DE ACTIVOS - 5 BOTONES */
+        .activos-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+            margin-bottom: 12px;
+        }
+
+        .btn-activo {
+            padding: 9px 6px;
+            background: #333;
+            border: 2px solid #3a3a3a;
+            border-radius: 4px;
+            color: #999;
+            font-weight: 600;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-activo:nth-child(4),
+        .btn-activo:nth-child(5) {
+            grid-column: span 1;
+        }
+
+        /* Hacer que los últimos 2 botones ocupen el espacio centrado */
+        .btn-activo:nth-child(4) {
+            grid-column: 1 / 2;
+        }
+
+        .btn-activo:nth-child(5) {
+            grid-column: 2 / 4;
+        }
+
+        .btn-activo:hover {
+            background: #3a3a3a;
+            border-color: #4a9eff;
+            color: #4a9eff;
+        }
+
+        .btn-activo.active {
+            background: #4a9eff;
+            border-color: #4a9eff;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .search-box {
+            margin-top: 12px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .motocompresor-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .motocompresor-item {
+            padding: 12px 14px;
+            margin-bottom: 4px;
+            background: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .motocompresor-item:hover {
+            background: #3a3a3a;
+            transform: translateX(2px);
+        }
+
+        .motocompresor-item.active {
+            background: #3a4a5a;
+            border-left-color: #4a9eff;
+        }
+
+        .motocompresor-item.status-disponible {
+            border-left-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .motocompresor-item.status-no-disponible {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .mtc-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .mtc-code {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            padding: 20px 30px;
+            background: #1f1f1f;
+            border-bottom: 2px solid #3a3a3a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            color: #e0e0e0;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .legend-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 2px solid;
+        }
+
+        .legend-indicator.disponible {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4caf50;
+        }
+
+        .legend-indicator.no-disponible {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .detail-view {
+            display: none;
+        }
+
+        .detail-view.active {
+            display: block;
+        }
+
+        .section {
+            background: #2a2a2a;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a9eff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-actualizar {
+            padding: 10px 24px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-actualizar:hover {
+            background: #3a8eef;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .btn-actualizar:active {
+            transform: translateY(0);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-grid.single-column {
+            grid-template-columns: 1fr;
+            max-width: 400px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            background: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a4a;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 40vh;
+                border-right: none;
+                border-bottom: 2px solid #3a3a3a;
+            }
+
+            .main-content {
+                height: 60vh;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .legend {
+                order: -1;
+                justify-content: center;
+            }
+
+            .top-bar h1 {
+                font-size: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .btn-actualizar {
+                width: 100%;
+            }
+
+            .activos-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .btn-activo:nth-child(5) {
+                grid-column: 1 / 3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>MOTOCOMPRESORES</h2>
+                
+                <!-- BOTONES DE ACTIVOS - 5 BOTONES -->
+                <div class="activos-selector">
+                    <button class="btn-activo active" data-activo="Samaria" onclick="filtrarPorActivo('Samaria')">Samaria</button>
+                    <button class="btn-activo" data-activo="Muspac" onclick="filtrarPorActivo('Muspac')">Muspac</button>
+                    <button class="btn-activo" data-activo="5P" onclick="filtrarPorActivo('5P')">5P</button>
+                    <button class="btn-activo" data-activo="Bellota" onclick="filtrarPorActivo('Bellota')">Bellota</button>
+                    <button class="btn-activo" data-activo="PozaRica" onclick="filtrarPorActivo('PozaRica')">Poza Rica</button>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar...">
+                </div>
+            </div>
+            <div class="motocompresor-list" id="mtcList">
+                <!-- POZOS SAMARIA -->
+                <div class="motocompresor-item status-disponible" data-id="1" data-activo="Samaria">
+                    <div class="mtc-name">SAMARIA 10</div>
+                    <div class="mtc-code">ESCLAVO01</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="2" data-activo="Samaria">
+                    <div class="mtc-name">SAMARIA 25</div>
+                    <div class="mtc-code">ESCLAVO02</div>
+                </div>
+                <div class="motocompresor-item status-no-disponible" data-id="3" data-activo="Samaria">
+                    <div class="mtc-name">SAMARIA 38</div>
+                    <div class="mtc-code">ESCLAVO03</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="4" data-activo="Samaria">
+                    <div class="mtc-name">SAMARIA 47</div>
+                    <div class="mtc-code">ESCLAVO04</div>
+                </div>
+
+                <!-- POZOS MUSPAC -->
+                <div class="motocompresor-item status-disponible" data-id="5" data-activo="Muspac" style="display: none;">
+                    <div class="mtc-name">MUSPAC 101</div>
+                    <div class="mtc-code">ESCLAVO10</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="6" data-activo="Muspac" style="display: none;">
+                    <div class="mtc-name">MUSPAC 205</div>
+                    <div class="mtc-code">ESCLAVO11</div>
+                </div>
+                <div class="motocompresor-item status-no-disponible" data-id="7" data-activo="Muspac" style="display: none;">
+                    <div class="mtc-name">MUSPAC 312</div>
+                    <div class="mtc-code">ESCLAVO12</div>
+                </div>
+
+                <!-- POZOS 5P -->
+                <div class="motocompresor-item status-disponible" data-id="8" data-activo="5P" style="display: none;">
+                    <div class="mtc-name">5P-001</div>
+                    <div class="mtc-code">ESCLAVO20</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="9" data-activo="5P" style="display: none;">
+                    <div class="mtc-name">5P-025</div>
+                    <div class="mtc-code">ESCLAVO21</div>
+                </div>
+                <div class="motocompresor-item status-no-disponible" data-id="10" data-activo="5P" style="display: none;">
+                    <div class="mtc-name">5P-037</div>
+                    <div class="mtc-code">ESCLAVO22</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="11" data-activo="5P" style="display: none;">
+                    <div class="mtc-name">5P-048</div>
+                    <div class="mtc-code">ESCLAVO23</div>
+                </div>
+
+                <!-- POZOS BELLOTA -->
+                <div class="motocompresor-item status-disponible" data-id="12" data-activo="Bellota" style="display: none;">
+                    <div class="mtc-name">BELLOTA 94</div>
+                    <div class="mtc-code">ESCLAVO30</div>
+                </div>
+                <div class="motocompresor-item status-no-disponible" data-id="13" data-activo="Bellota" style="display: none;">
+                    <div class="mtc-name">BELLOTA 159</div>
+                    <div class="mtc-code">ESCLAVO31</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="14" data-activo="Bellota" style="display: none;">
+                    <div class="mtc-name">BELLOTA 203</div>
+                    <div class="mtc-code">ESCLAVO32</div>
+                </div>
+
+                <!-- POZOS POZA RICA -->
+                <div class="motocompresor-item status-disponible" data-id="15" data-activo="PozaRica" style="display: none;">
+                    <div class="mtc-name">POZA RICA 15</div>
+                    <div class="mtc-code">ESCLAVO40</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="16" data-activo="PozaRica" style="display: none;">
+                    <div class="mtc-name">POZA RICA 28</div>
+                    <div class="mtc-code">ESCLAVO41</div>
+                </div>
+                <div class="motocompresor-item status-no-disponible" data-id="17" data-activo="PozaRica" style="display: none;">
+                    <div class="mtc-name">POZA RICA 42</div>
+                    <div class="mtc-code">ESCLAVO42</div>
+                </div>
+                <div class="motocompresor-item status-disponible" data-id="18" data-activo="PozaRica" style="display: none;">
+                    <div class="mtc-name">POZA RICA 56</div>
+                    <div class="mtc-code">ESCLAVO43</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1 id="mainTitle">Sistema de Gestión</h1>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-indicator disponible"></div>
+                        <span>Disponible</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator no-disponible"></div>
+                        <span>No Disponible</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- EMPTY STATE -->
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M9 3v18"/>
+                        <path d="M9 9h12"/>
+                        <path d="M9 15h12"/>
+                    </svg>
+                    <p>Selecciona un motocompresor para ver su información</p>
+                </div>
+
+                <!-- DETAIL VIEW -->
+                <div class="detail-view" id="detailView">
+                    
+                    <!-- SECCIÓN 1: POZO -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">Pozo</h3>
+                            <button class="btn-actualizar" onclick="actualizarPozo()">Actualizar Pozo</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nombre Pozo</label>
+                                <input type="text" id="nombrePozo" value="" placeholder="Ej: SAMARIA 10">
+                            </div>
+                            <div class="form-group">
+                                <label>Estatus</label>
+                                <select id="estatusPozo">
+                                    <option value="1">1 (ACTIVO)</option>
+                                    <option value="0">0 (INACTIVO)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Esclavo</label>
+                                <input type="text" id="esclavo" value="" placeholder="ESCLAVO01">
+                            </div>
+                            <div class="form-group">
+                                <label>Sector</label>
+                                <select id="sector">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="SAMARIA">SAMARIA</option>
+                                    <option value="MUSPAC">MUSPAC</option>
+                                    <option value="5P">5P</option>
+                                    <option value="MORA">SECTOR MORA</option>
+                                    <option value="JUJO">JUJO</option>
+                                    <option value="TECO">TECO</option>
+                                    <option value="BELLOTA">BELLOTA</option>
+                                    <option value="BELLOTA_CHINCHORRO">BELLOTA-CHINCHORRO</option>
+                                    <option value="MADREFIL">MADREFIL</option>
+                                    <option value="PAREDON">PAREDON</option>
+                                    <option value="TUPILCO">TUPILCO</option>
+                                    <option value="BRICOL">BRICOL</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 2: MTC -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">MTC</h3>
+                            <button class="btn-actualizar" onclick="actualizarMTC()">Actualizar MTC</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Descripción</label>
+                                <input type="text" id="descripcion" value="" placeholder="Descripción del MTC">
+                            </div>
+                            <div class="form-group">
+                                <label>Patín</label>
+                                <input type="text" id="patin" value="" placeholder="Ej: PATIN-01">
+                            </div>
+                            <div class="form-group">
+                                <label>Disponible</label>
+                                <select id="disponible">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="OPERANDO">OPERANDO</option>
+                                    <option value="DISPONIBLE">DISPONIBLE</option>
+                                    <option value="CANCELADO_PROGRAMA">CANCELADO CON PROGRAMA</option>
+                                    <option value="DE_BAJA">DE BAJA</option>
+                                    <option value="CANCELADO">CANCELADO</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha Instalación</label>
+                                <input type="date" id="fechaInstalacion" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 3: IP -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">IP</h3>
+                            <button class="btn-actualizar" onclick="actualizarIP()">Actualizar IP</button>
+                        </div>
+                        <div class="form-grid single-column">
+                            <div class="form-group">
+                                <label>Dirección IP</label>
+                                <input type="text" id="direccionIP" value="" placeholder="192.168.1.1">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ELEMENTOS
+        const mtcList = document.getElementById('mtcList');
+        const emptyState = document.getElementById('emptyState');
+        const detailView = document.getElementById('detailView');
+        const mainTitle = document.getElementById('mainTitle');
+        const searchInput = document.getElementById('searchInput');
+        let activoActual = 'Samaria'; // Activo por defecto (Samaria primero)
+
+        // FILTRAR POR ACTIVO
+        function filtrarPorActivo(activo) {
+            activoActual = activo;
+            
+            // Actualizar botones activos
+            document.querySelectorAll('.btn-activo').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Mostrar/ocultar pozos según el activo
+            const items = document.querySelectorAll('.motocompresor-item');
+            items.forEach(item => {
+                if (item.dataset.activo === activo) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Limpiar selección y volver al estado vacío
+            document.querySelectorAll('.motocompresor-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            emptyState.style.display = 'flex';
+            detailView.classList.remove('active');
+            mainTitle.textContent = 'Sistema de Gestión';
+            searchInput.value = '';
+        }
+
+        // SELECCIÓN DE MOTOCOMPRESOR
+        mtcList.addEventListener('click', (e) => {
+            const item = e.target.closest('.motocompresor-item');
+            if (!item || item.style.display === 'none') return;
+
+            // Remover active de todos
+            document.querySelectorAll('.motocompresor-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Activar el seleccionado
+            item.classList.add('active');
+
+            // Mostrar detalle
+            emptyState.style.display = 'none';
+            detailView.classList.add('active');
+
+            // Actualizar título
+            const name = item.querySelector('.mtc-name').textContent;
+            mainTitle.textContent = name;
+
+            // Cargar datos del motocompresor seleccionado
+            cargarDatosMotocompresor(item.dataset.id);
+        });
+
+        // BÚSQUEDA
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.motocompresor-item');
+
+            items.forEach(item => {
+                // Solo buscar dentro del activo actual
+                if (item.dataset.activo !== activoActual) return;
+
+                const name = item.querySelector('.mtc-name').textContent.toLowerCase();
+                const code = item.querySelector('.mtc-code').textContent.toLowerCase();
+
+                if (name.includes(searchTerm) || code.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // CARGAR DATOS DEL MOTOCOMPRESOR
+        function cargarDatosMotocompresor(id) {
+            // Aquí harías la consulta a la BD
+            // Por ahora, datos de ejemplo según el ID
+            const datosEjemplo = {
+                '1': { nombre: 'SAMARIA 10', esclavo: 'ESCLAVO01', ip: '192.168.0.101' },
+                '2': { nombre: 'SAMARIA 25', esclavo: 'ESCLAVO02', ip: '192.168.0.102' },
+                '3': { nombre: 'SAMARIA 38', esclavo: 'ESCLAVO03', ip: '192.168.0.103' },
+                '4': { nombre: 'SAMARIA 47', esclavo: 'ESCLAVO04', ip: '192.168.0.104' },
+                '5': { nombre: 'MUSPAC 101', esclavo: 'ESCLAVO10', ip: '192.168.1.101' },
+                '6': { nombre: 'MUSPAC 205', esclavo: 'ESCLAVO11', ip: '192.168.1.102' },
+                '7': { nombre: 'MUSPAC 312', esclavo: 'ESCLAVO12', ip: '192.168.1.103' },
+                '8': { nombre: '5P-001', esclavo: 'ESCLAVO20', ip: '192.168.2.101' },
+                '9': { nombre: '5P-025', esclavo: 'ESCLAVO21', ip: '192.168.2.102' },
+                '10': { nombre: '5P-037', esclavo: 'ESCLAVO22', ip: '192.168.2.103' },
+                '11': { nombre: '5P-048', esclavo: 'ESCLAVO23', ip: '192.168.2.104' },
+                '12': { nombre: 'BELLOTA 94', esclavo: 'ESCLAVO30', ip: '192.168.3.101' },
+                '13': { nombre: 'BELLOTA 159', esclavo: 'ESCLAVO31', ip: '192.168.3.102' },
+                '14': { nombre: 'BELLOTA 203', esclavo: 'ESCLAVO32', ip: '192.168.3.103' },
+                '15': { nombre: 'POZA RICA 15', esclavo: 'ESCLAVO40', ip: '192.168.4.101' },
+                '16': { nombre: 'POZA RICA 28', esclavo: 'ESCLAVO41', ip: '192.168.4.102' },
+                '17': { nombre: 'POZA RICA 42', esclavo: 'ESCLAVO42', ip: '192.168.4.103' },
+                '18': { nombre: 'POZA RICA 56', esclavo: 'ESCLAVO43', ip: '192.168.4.104' }
+            };
+
+            const datos = datosEjemplo[id];
+            if (datos) {
+                document.getElementById('nombrePozo').value = datos.nombre;
+                document.getElementById('esclavo').value = datos.esclavo;
+                document.getElementById('descripcion').value = 'Motocompresor ' + datos.nombre;
+                document.getElementById('patin').value = 'PATIN-' + id.padStart(2, '0');
+                document.getElementById('direccionIP').value = datos.ip;
+            }
+        }
+
+        // FUNCIONES DE ACTUALIZACIÓN
+        function actualizarPozo() {
+            const datos = {
+                nombrePozo: document.getElementById('nombrePozo').value,
+                estatus: document.getElementById('estatusPozo').value,
+                esclavo: document.getElementById('esclavo').value,
+                sector: document.getElementById('sector').value
+            };
+            console.log('Actualizando Pozo:', datos);
+            alert('Datos del POZO actualizados correctamente');
+            // Aquí iría la petición a la API/BD
+        }
+
+        function actualizarMTC() {
+            const datos = {
+                descripcion: document.getElementById('descripcion').value,
+                patin: document.getElementById('patin').value,
+                disponible: document.getElementById('disponible').value,
+                fechaInstalacion: document.getElementById('fechaInstalacion').value
+            };
+            console.log('Actualizando MTC:', datos);
+            alert('Datos del MTC actualizados correctamente');
+            // Aquí iría la petición a la API/BD
+        }
+
+        function actualizarIP() {
+            const datos = {
+                direccionIP: document.getElementById('direccionIP').value
+            };
+            console.log('Actualizando IP:', datos);
+            alert('Dirección IP actualizada correctamente');
+            // Aquí iría la petición a la API/BD
+        }
+    </script>
+</body>
+</html>
