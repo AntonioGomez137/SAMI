@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - API Motocompresores</title>
+    <link rel="stylesheet" href="test.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Test de Endpoints - Sistema MTC</h1>
+            <div id="status" class="status">Listo para probar</div>
+        </header>
+
+        <!-- Sección de Controles -->
+        <section class="controls">
+            <h2>Controles de Prueba</h2>
+            
+            <div class="button-group">
+                <button onclick="cargarTodosLosPozos()">📋 Cargar Todos los Pozos</button>
+                <button onclick="cargarTiposMTC()">🏷️ Cargar Tipos MTC</button>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="filters-container">
+                <div class="input-group">
+                    <label>🔍 Buscar Pozo (Nombre o Código):</label>
+                    <input type="text" 
+                           id="searchInput" 
+                           placeholder="Escribe para buscar en tiempo real..."
+                           oninput="aplicarFiltros()">
+                    <span id="resultadosCount" class="results-count">0 resultados</span>
+                </div>
+
+                <div class="input-group">
+                    <label>Filtrar por Activo:</label>
+                    <select id="activoSelect" onchange="aplicarFiltros()">
+                        <option value="">Todos los Activos</option>
+                        <option value="Samaria">Samaria</option>
+                        <option value="Muspac">Muspac</option>
+                        <option value="5P">5P</option>
+                        <option value="Bellota">Bellota</option>
+                        <option value="Poza Rica">Poza Rica</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="limpiarFiltros()" class="btn-clear">🗑️ Limpiar Filtros</button>
+        </section>
+
+        <!-- Sección de Lista de Pozos -->
+        <section class="data-section">
+            <h2>Lista de Pozos</h2>
+            <div id="listaPozos" class="data-box">
+                <p class="placeholder">Presiona "Cargar Todos los Pozos" para ver la lista</p>
+            </div>
+        </section>
+
+        <!-- Sección de Formulario de Detalle -->
+        <section class="data-section">
+            <h2>Detalle del Pozo Seleccionado</h2>
+            
+            <form id="formPozo" class="form">
+                <fieldset>
+                    <legend>📍 Información del Pozo</legend>
+                    
+                    <div class="form-row">
+                        <label>ID Pozo:</label>
+                        <input type="text" id="idPozo" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Nombre del Pozo:</label>
+                        <input type="text" id="nombrePozo" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Estatus:</label>
+                        <input type="text" id="estatusPozo" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Abreviación KepServer:</label>
+                        <input type="text" id="abrvKepServer" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Activo:</label>
+                        <input type="text" id="activo" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Sector (FK):</label>
+                        <input type="text" id="fkIdSector" readonly>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>🔧 Información del MTC</legend>
+                    
+                    <div class="form-row">
+                        <label>ID Tipo MTC:</label>
+                        <input type="text" id="idTipoMtc" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Descripción:</label>
+                        <input type="text" id="descripcionMtc" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Patín:</label>
+                        <input type="text" id="patin" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Disponibilidad:</label>
+                        <input type="text" id="disponible" readonly>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>Fecha Instalación:</label>
+                        <input type="text" id="fechaInstalacion" readonly>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>🌐 Información de Equipos</legend>
+                    
+                    <div class="form-row">
+                        <label>Dirección IP (Equipo POZO):</label>
+                        <input type="text" id="direccionIP" readonly>
+                    </div>
+                    
+                    <div id="otrosEquipos" class="equipos-list"></div>
+                </fieldset>
+            </form>
+        </section>
+
+        <!-- Sección de Logs/Consola -->
+        <section class="data-section">
+            <h2>📊 Consola de Respuestas (JSON)</h2>
+            <pre id="jsonOutput" class="json-output">Las respuestas de la API aparecerán aquí...</pre>
+        </section>
+    </div>
+
+    <script src="test-app.js"></script>
+</body>
+</html>
